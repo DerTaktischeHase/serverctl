@@ -191,19 +191,26 @@ else
 fi
 echo
 
-echo "⚙️ Services:"
-SERVICES=(ssh sshd nginx docker node)
-for svc in "${SERVICES[@]}"; do
-  if systemctl list-unit-files 2>/dev/null | grep -q "^${svc}\.service"; then
-    state="$(systemctl is-active "$svc" 2>/dev/null || true)"
-    if [[ "$state" == "active" ]]; then
-      echo "✓ ${svc} läuft"
-    else
-      echo "✗ ${svc} gestoppt"
-    fi
+echo "⚙️ Services (running):"
+
+if command -v systemctl >/dev/null 2>&1; then
+  # Alle laufenden systemd-Services (ohne Pager, ohne Header)
+  running_services="$(systemctl list-units --type=service --state=running --no-legend --no-pager 2>/dev/null || true)"
+
+  if [[ -z "${running_services// /}" ]]; then
+    echo "– Aktuell sind keine Services aktiv"
+  else
+    # Ausgabe: Unit + kurze Beschreibung
+    # Beispielzeile von systemctl: "ssh.service loaded active running OpenBSD Secure Shell server"
+    echo "$running_services" | awk '{unit=$1; $1=""; sub(/^ +/,""); desc=$0; printf "✓ %-35s %s\n", unit, desc}'
   fi
-done
+else
+  echo "– systemctl nicht verfügbar (kein systemd)."
+fi
+
 echo
+
+
 
 print_tool() {
   local tool="$1"
