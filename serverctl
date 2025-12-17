@@ -218,10 +218,10 @@ if command -v vcgencmd >/dev/null 2>&1; then
 elif command -v sensors >/dev/null 2>&1; then
   # AMD/Intel: bevorzugt CPU-Zeilen (Tctl/Tdie/Package id 0/Core 0) und nimmt die ERSTE Temperatur in der Zeile
   temp_num="$(
-    sensors 2>/dev/null \
-      | grep -E '^(Tctl:|Tdie:|Package id 0:|Core 0:)' \
-      | sed -n 's/.*+\([0-9.]\+\)°C.*/\1/p' \
-      | head -n 1
+  sensors k10temp-pci-00c3 2>/dev/null \
+    | grep -E '^Tctl:' \
+    | sed -n 's/.*+\([0-9.]\+\)°C.*/\1/p' \
+    | head -n 1
   )"
 fi
 
