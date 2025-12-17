@@ -3,6 +3,43 @@ set -euo pipefail
 
 VERSION="1.0.0"
 
+# -------------------------------
+# Uninstall
+# -------------------------------
+if [[ "${1:-}" == "--uninstall" ]]; then
+  echo "serverctl wird deinstalliert."
+  read -rp "Fortfahren? (y/N): " answer
+
+  if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+    echo "Abgebrochen."
+    exit 0
+  fi
+
+  BIN="$HOME/.local/bin/serverctl"
+  BASHRC="$HOME/.bashrc"
+
+  # Binary entfernen
+  if [ -f "$BIN" ]; then
+    rm -f "$BIN"
+    echo "✓ Entfernt: $BIN"
+  else
+    echo "Hinweis: $BIN nicht gefunden"
+  fi
+
+  # SSH-Hinweis aus .bashrc entfernen
+  if [ -f "$BASHRC" ] && grep -q "SERVERCTL_HINT_SHOWN" "$BASHRC"; then
+    sed -i '/serverctl Hinweis bei SSH-Login/,+6d' "$BASHRC"
+    echo "✓ SSH-Hinweis aus ~/.bashrc entfernt"
+  fi
+
+  echo
+  echo "serverctl wurde erfolgreich deinstalliert."
+  echo "Öffne eine neue Shell, um die Änderung zu übernehmen."
+
+  exit 0
+fi
+
+
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat << 'EOF'
 serverctl – Server Wartungs- & Monitoring-Cockpit (SSH-freundlich)
