@@ -4,6 +4,41 @@ set -euo pipefail
 VERSION="1.0.0"
 
 # -------------------------------
+# Update
+# -------------------------------
+if [[ "${1:-}" == "--update" ]]; then
+  command -v curl >/dev/null 2>&1 || { echo "Fehler: curl fehlt (installiere mit: sudo apt install curl)"; exit 1; }
+
+  remote_ver="$(get_remote_version || true)"
+  if [[ -z "${remote_ver:-}" ]]; then
+    echo "Fehler: Konnte Remote-Version nicht abrufen."
+    exit 1
+  fi
+
+  if [[ "$(ver_to_num "$remote_ver")" -le "$(ver_to_num "$VERSION")" ]]; then
+    echo "Kein Update nötig. Lokal: $VERSION, Repo: $remote_ver"
+    exit 0
+  fi
+
+  echo "Update verfügbar: Lokal $VERSION → Repo $remote_ver"
+  read -rp "Jetzt aktualisieren? (y/N): " answer
+  if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+    echo "Abgebrochen."
+    exit 0
+  fi
+
+  tmp="$(mktemp)"
+  curl -fsSL "$REPO_RAW_URL/serverctl" -o "$tmp"
+  chmod +x "$tmp"
+  mv "$tmp" "$SELF_PATH"
+
+  echo "✓ Aktualisiert: $SELF_PATH"
+  echo "Starte jetzt neu: serverctl"
+  exit 0
+fi
+
+
+# -------------------------------
 # Uninstall
 # -------------------------------
 if [[ "${1:-}" == "--uninstall" ]]; then
