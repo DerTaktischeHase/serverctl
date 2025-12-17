@@ -1,0 +1,47 @@
+name: Update README version from serverctl
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - serverctl
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract VERSION from serverctl
+        id: version
+        run: |
+          VERSION=$(sed -n 's/^VERSION="\([^"]*\)".*/\1/p' serverctl | head -n 1)
+          if [ -z "$VERSION" ]; then
+            echo "Fehler: VERSION konnte nicht aus serverctl gelesen werden."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update README SemVer version only
+        run: |
+          # Ersetzt nur die Zahl in: VERSION="**x.y.z**" _(siehe serverctl datei)_
+          sed -i -E 's/^(VERSION="\*\*)[0-9]+\.[0-9]+\.[0-9]+(\*\*" _\(siehe serverctl datei\)_)/\1${{ steps.version.outputs.version }}\2/' README.md
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          if git diff --quiet; then
+            echo "Keine Änderung nötig."
+            exit 0
+          fi
+
+          git add README.md
+          git commit -m "docs: sync README version to ${{ steps.version.outputs.version }}"
+          git push
