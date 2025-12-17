@@ -217,12 +217,11 @@ if command -v vcgencmd >/dev/null 2>&1; then
   temp_num="$(echo "$temp_str" | sed -n 's/.*=\([0-9.]\+\).*/\1/p' | head -n 1)"
 elif command -v sensors >/dev/null 2>&1; then
   # AMD/Intel: bevorzugt CPU-Zeilen (Tctl/Tdie/Package id 0/Core 0) und nimmt die ERSTE Temperatur in der Zeile
-  temp_num="$(
-  sensors k10temp-pci-00c3 2>/dev/null \
-    | grep -E '^Tctl:' \
-    | sed -n 's/.*+\([0-9.]\+\)°C.*/\1/p' \
-    | head -n 1
-  )"
+  t1="$( ...dein temp_num command... )"
+  sleep 0.3
+  t2="$( ...dein temp_num command... )"
+  temp_num="$(awk "BEGIN{printf \"%.1f\", (($t1+$t2)/2)}")"
+
 fi
 
 if [[ -n "${temp_num:-}" ]]; then
