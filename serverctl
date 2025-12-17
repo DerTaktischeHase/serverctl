@@ -201,8 +201,10 @@ section "System"
 uname -a
 uptime || true
 echo
+
+
 # ---------------------------------
-# CPU Temperature (fix: CPU korrekt aus sensors, nicht GPU/crit)
+# CPU Temperature (robust: mawk/gawk kompatibel)
 # ---------------------------------
 section "CPU Temperature"
 
@@ -214,19 +216,22 @@ if command -v vcgencmd >/dev/null 2>&1; then
   temp_str="$(vcgencmd measure_temp 2>/dev/null || true)"
   temp_num="$(echo "$temp_str" | sed -n 's/.*=\([0-9.]\+\).*/\1/p' | head -n 1)"
 elif command -v sensors >/dev/null 2>&1; then
-  # Linux (AMD/Intel): bevorzugt CPU-Sensoren (Tctl/Tdie/Package id 0/Core 0)
+  # Linux (AMD/Intel): CPU bevorzugen (Tctl/Tdie/Package id 0/Core 0)
   temp_num="$(
     sensors 2>/dev/null | awk '
-      /Tctl:/         { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
-      /Tdie:/         { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
-      /Package id 0:/ { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
-      /Core 0:/       { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
+      /Tctl:|Tdie:|Package id 0:|Core 0:/ {
+        if (match($0, /\+[0-9.]+°C/)) {
+          s = substr($0, RSTART+1, RLENGTH-3);  # +64.4°C -> 64.4
+          print s;
+          exit
+        }
+      }
     '
   )"
 fi
 
 if [[ -n "${temp_num:-}" ]]; then
-  # Schwellenwerte (Server/Desktop sinnvoll): OK <70, WARN <85, HOT >=85
+  # Schwellenwerte: OK <70, WARN <85, HOT >=85
   if awk "BEGIN{exit !($temp_num < 70)}"; then
     badge="${c_green}OK${c_reset}"
   elif awk "BEGIN{exit !($temp_num < 85)}"; then
@@ -240,6 +245,7 @@ else
   echo "CPU-TEMP=UNKNOWN  (Tipp: Pi: vcgencmd; sonst: sudo apt install lm-sensors && sudo sensors-detect)"
 fi
 echo
+
 
 
 section "Memory"
