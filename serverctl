@@ -112,6 +112,15 @@ EOF
   exit 0
 fi
 
+# -------------------------------
+# Update Hinweis (nur Hinweis, kein Auto-Update)
+# -------------------------------
+remote_ver="$(get_remote_version || true)"
+if [[ -n "${remote_ver:-}" && "$(ver_to_num "$remote_ver")" -gt "$(ver_to_num "$VERSION")" ]]; then
+  echo "Hinweis: Update verfügbar (lokal: $VERSION → repo: $remote_ver). Nutze: serverctl --update"
+  echo
+fi
+
 
 clear
 echo "=================================================="
