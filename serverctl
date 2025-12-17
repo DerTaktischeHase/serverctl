@@ -201,26 +201,46 @@ section "System"
 uname -a
 uptime || true
 echo
-
+# ---------------------------------
+# CPU Temperature (fix: CPU korrekt aus sensors, nicht GPU/crit)
+# ---------------------------------
 section "CPU Temperature"
-# Wunschformat: CPU-TEMP=44.4'C + Warnstufe
-temp_str=""
+
 temp_num=""
+badge="UNKNOWN"
+
 if command -v vcgencmd >/dev/null 2>&1; then
-  temp_str="$(vcgencmd measure_temp 2>/dev/null || true)"   # temp=44.4'C
-  temp_num="$(echo "$temp_str" | sed -n "s/.*=\([0-9.]\+\).*/\1/p" | head -n 1)"
+  # Raspberry Pi: temp=44.4'C
+  temp_str="$(vcgencmd measure_temp 2>/dev/null || true)"
+  temp_num="$(echo "$temp_str" | sed -n 's/.*=\([0-9.]\+\).*/\1/p' | head -n 1)"
 elif command -v sensors >/dev/null 2>&1; then
-  # Versuch: erste gefundene "Package id 0" oder "CPU" oder erste Temperatur
-  temp_num="$(sensors 2>/dev/null | sed -n 's/.*+\([0-9.]\+\)°C.*/\1/p' | head -n 1)"
+  # Linux (AMD/Intel): bevorzugt CPU-Sensoren (Tctl/Tdie/Package id 0/Core 0)
+  temp_num="$(
+    sensors 2>/dev/null | awk '
+      /Tctl:/         { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
+      /Tdie:/         { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
+      /Package id 0:/ { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
+      /Core 0:/       { if (match($0, /\+([0-9.]+)°C/, m)) { print m[1]; exit } }
+    '
+  )"
 fi
 
 if [[ -n "${temp_num:-}" ]]; then
-  badge="$(temp_badge "$temp_num")"
+  # Schwellenwerte (Server/Desktop sinnvoll): OK <70, WARN <85, HOT >=85
+  if awk "BEGIN{exit !($temp_num < 70)}"; then
+    badge="${c_green}OK${c_reset}"
+  elif awk "BEGIN{exit !($temp_num < 85)}"; then
+    badge="${c_yellow}WARN${c_reset}"
+  else
+    badge="${c_red}HOT${c_reset}"
+  fi
+
   printf "CPU-TEMP=%s'C  [%b]\n" "$temp_num" "$badge"
 else
-  echo "CPU-TEMP=UNKNOWN  (Tipp: Raspberry Pi: vcgencmd, sonst: sudo apt install lm-sensors && sudo sensors-detect)"
+  echo "CPU-TEMP=UNKNOWN  (Tipp: Pi: vcgencmd; sonst: sudo apt install lm-sensors && sudo sensors-detect)"
 fi
 echo
+
 
 section "Memory"
 if command -v free >/dev/null 2>&1; then
