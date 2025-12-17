@@ -99,16 +99,19 @@ serverctl – Server Wartungs- & Monitoring-Cockpit (SSH-freundlich)
 Verwendung:
   serverctl              Zeigt die Server-Übersicht
   serverctl --help       Diese Hilfe anzeigen
+  serverctl --update     Aktualisiert serverctl aus dem GitHub-Repo
   serverctl --uninstall  Deinstalliert serverctl (entfernt auch SSH-Hinweis aus ~/.bashrc)
 
 Bearbeiten:
   nano ~/.local/bin/serverctl
 
 Hinweise:
+  - --update lädt die Datei aus dem Repository und ersetzt ~/.local/bin/serverctl
   - Nach --uninstall ist serverctl entfernt und der Befehl nicht mehr verfügbar.
 EOF
   exit 0
 fi
+
 
 clear
 echo "=================================================="
