@@ -102,19 +102,35 @@ print_tool() {
 echo "🧰 Wartungstools (Status):"
 echo
 echo "[System]"
+print_tool btop btop
 print_tool htop htop
 print_tool uptime coreutils
 print_tool free procps
+print_tool df coreutils
+print_tool sensors lm-sensors
 print_tool journalctl systemd
+
 echo
 echo "[Disk]"
 print_tool ncdu ncdu
 print_tool lsblk util-linux
+print_tool mount util-linux
+print_tool iostat sysstat
+print_tool smartctl smartmontools
+
 echo
 echo "[Network]"
-print_tool iftop iftop
+print_tool ip iproute2
 print_tool ss iproute2
+print_tool iftop iftop
 print_tool lsof lsof
+print_tool ping iputils-ping
+print_tool traceroute traceroute
+
+echo
+echo "[Security]"
+print_tool ufw ufw
+print_tool fail2ban-client fail2ban
 echo
 
 echo "=================================================="
