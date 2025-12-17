@@ -20,16 +20,19 @@ jobs:
       - name: Extract VERSION from serverctl
         id: version
         run: |
-          VERSION=$(sed -n 's/^VERSION="\([^"]*\)".*/\1/p' serverctl | head -n 1)
+          VERSION="$(grep -E '^[[:space:]]*VERSION="' serverctl \
+            | head -n 1 \
+            | sed -E 's/.*VERSION="([^"]*)".*/\1/')"
+
           if [ -z "$VERSION" ]; then
             echo "Fehler: VERSION konnte nicht aus serverctl gelesen werden."
             exit 1
           fi
+
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update README SemVer version only
         run: |
-          # Ersetzt nur die Zahl in: VERSION="**x.y.z**" _(siehe serverctl datei)_
           sed -i -E 's/^(VERSION="\*\*)[0-9]+\.[0-9]+\.[0-9]+(\*\*" _\(siehe serverctl datei\)_)/\1${{ steps.version.outputs.version }}\2/' README.md
 
       - name: Commit and push if changed
