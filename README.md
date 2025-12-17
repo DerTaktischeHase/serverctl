@@ -17,4 +17,4 @@ curl -fsSL https://raw.githubusercontent.com/DerTaktischeHase/serverctl/main/ins
 
 ## SemVer (DEV)
 
-Aktuelle version: VERSION="1.0.0"
+VERSION="**1.0.0**" _(siehe serverctl datei)_
