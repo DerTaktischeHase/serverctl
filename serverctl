@@ -21,6 +21,7 @@ ver_to_num() {
 }
 
 
+
 # -------------------------------
 # Update
 # -------------------------------
@@ -52,6 +53,16 @@ if [[ "${1:-}" == "--update" ]]; then
 
   echo "✓ Aktualisiert: $SELF_PATH"
   echo "Starte jetzt neu: serverctl"
+  exit 0
+fi
+
+
+# -------------------------------
+# Version
+# -------------------------------
+
+if [[ "${1:-}" == "--version" ]]; then
+  echo "serverctl version $VERSION"
   exit 0
 fi
 
@@ -99,6 +110,7 @@ serverctl – Server Wartungs- & Monitoring-Cockpit (SSH-freundlich)
 Verwendung:
   serverctl              Zeigt die Server-Übersicht
   serverctl --help       Diese Hilfe anzeigen
+  serverctl --version    Zeigt welche Version du nutzt
   serverctl --update     Aktualisiert serverctl aus dem GitHub-Repo
   serverctl --uninstall  Deinstalliert serverctl (entfernt auch SSH-Hinweis aus ~/.bashrc)
 
