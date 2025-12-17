@@ -39,17 +39,20 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   exit 0
 fi
 
-
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat << 'EOF'
 serverctl – Server Wartungs- & Monitoring-Cockpit (SSH-freundlich)
 
 Verwendung:
-  serverctl            Zeigt die Server-Übersicht
-  serverctl --help     Diese Hilfe
+  serverctl              Zeigt die Server-Übersicht
+  serverctl --help       Diese Hilfe anzeigen
+  serverctl --uninstall  Deinstalliert serverctl (entfernt auch SSH-Hinweis aus ~/.bashrc)
 
 Bearbeiten:
   nano ~/.local/bin/serverctl
+
+Hinweise:
+  - Nach --uninstall ist serverctl entfernt und der Befehl nicht mehr verfügbar.
 EOF
   exit 0
 fi
