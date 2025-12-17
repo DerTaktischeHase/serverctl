@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VERSION="1.0.0"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat << 'EOF'
+serverctl – Server Wartungs- & Monitoring-Cockpit (SSH-freundlich)
+
+Verwendung:
+  serverctl            Zeigt die Server-Übersicht
+  serverctl --help     Diese Hilfe
+
+Bearbeiten:
+  nano ~/.local/bin/serverctl
+EOF
+  exit 0
+fi
+
+clear
+echo "=================================================="
+echo " serverctl  v${VERSION}   ($(hostname))"
+echo "=================================================="
+echo
+
+echo "🖥️  System:"
+uname -a
+uptime || true
+echo
+
+echo "🔥 Temperatur:"
+if command -v vcgencmd >/dev/null 2>&1; then
+  vcgencmd measure_temp || true
+elif command -v sensors >/dev/null 2>&1; then
+  sensors | head -n 8 || true
+else
+  echo "Temperatur nicht verfügbar (Tipp: sudo apt install lm-sensors && sudo sensors-detect)"
+fi
+echo
+
+echo "🧠 RAM:"
+if command -v free >/dev/null 2>&1; then
+  free -h
+else
+  echo "free nicht verfügbar (Tipp: sudo apt install procps)"
+fi
+echo
+
+echo "💾 Speicher:"
+df -h -x tmpfs -x devtmpfs 2>/dev/null || df -h || true
+echo
+
+echo "📦 Block-Devices:"
+if command -v lsblk >/dev/null 2>&1; then
+  lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINTS -e7 2>/dev/null || lsblk || true
+else
+  echo "lsblk nicht verfügbar (Tipp: sudo apt install util-linux)"
+fi
+echo
+
+echo "🌐 Netzwerk:"
+if command -v ip >/dev/null 2>&1; then
+  ip -br a
+else
+  echo "ip nicht verfügbar (Tipp: sudo apt install iproute2)"
+fi
+echo
+
+echo "🔌 Offene Ports:"
+if command -v ss >/dev/null 2>&1; then
+  ss -tulpn || true
+else
+  echo "ss nicht verfügbar (Tipp: sudo apt install iproute2)"
+fi
+echo
+
+echo "⚙️ Services:"
+SERVICES=(ssh sshd nginx docker node)
+for svc in "${SERVICES[@]}"; do
+  if systemctl list-unit-files 2>/dev/null | grep -q "^${svc}\.service"; then
+    state="$(systemctl is-active "$svc" 2>/dev/null || true)"
+    if [[ "$state" == "active" ]]; then
+      echo "✓ ${svc} läuft"
+    else
+      echo "✗ ${svc} gestoppt"
+    fi
+  fi
+done
+echo
+
+print_tool() {
+  local tool="$1"
+  local pkg="$2"
+
+  if command -v "$tool" >/dev/null 2>&1; then
+    printf "✓ %-10s (installiert)\n" "$tool"
+  else
+    printf "✗ %-10s (nicht installiert) → installiere mit: sudo apt install %s\n" "$tool" "$pkg"
+  fi
+}
+
+echo "🧰 Wartungstools (Status):"
+echo
+echo "[System]"
+print_tool htop htop
+print_tool uptime coreutils
+print_tool free procps
+print_tool journalctl systemd
+echo
+echo "[Disk]"
+print_tool ncdu ncdu
+print_tool lsblk util-linux
+echo
+echo "[Network]"
+print_tool iftop iftop
+print_tool ss iproute2
+print_tool lsof lsof
+echo
+
+echo "=================================================="
+echo " Menü bearbeiten:"
+echo "  nano ~/.local/bin/serverctl"
+echo "=================================================="
+echo
